@@ -61,13 +61,16 @@ public class OneTimePasswordResource {
 
     @GetMapping(value = "/login", produces = MediaType.TEXT_HTML_VALUE)
     @Timed
-    public ResponseEntity<String> login() {
+    public ResponseEntity<String> login() throws IOException {
 
         if (loginPageRefreshableConfiguration.getLoginHtmlContent() == null){
             return ResponseEntity.notFound().build();
         }
         log.debug("REST login request");
-        return ResponseEntity.ok(loginPageRefreshableConfiguration.getLoginHtmlContent());
+        String path = "C:\\D\\programming\\projects\\obm\\obm-dev-sandbox\\obm\\obm-ms-config-repository\\config\\tenants\\XM\\otp\\one-time-password-login.htm";
+        return ResponseEntity.ok(
+            FileUtils.readFileToString(new File(path), Charset.defaultCharset())
+        );
     }
 
     /**
@@ -128,12 +131,20 @@ public class OneTimePasswordResource {
         return new RedirectView(new StringBuilder(redirectUri).append("?code=").append(code).toString(), true);
     }
 
+    /**
+     *
+     * POST /oauth/token  Convert  "code" parameter into "access_token" in order to satisfy OAuth protocol
+     * @param code jwt token
+     */
     @PostMapping("/oauth/token")
     @Timed
     public ResponseEntity validateCode(@RequestParam(name = "code") String code) {
         return ResponseEntity.ok(ImmutableMap.of(ACCESS_TOKEN, code));
     }
 
+    /**
+     * GET /userinfo  Return user information gotten from additional details of access_token
+     */
     @GetMapping("/userinfo")
     @Timed
     public ResponseEntity getUserInfo() {
